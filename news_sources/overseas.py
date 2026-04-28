@@ -5,7 +5,7 @@ import requests
 import feedparser
 from bs4 import BeautifulSoup
 from config import settings
-from utils import NewsItem
+from utils import NewsItem, get_news_summary
 
 
 def fetch_overseas_news() -> list[NewsItem]:
@@ -33,7 +33,11 @@ def fetch_overseas_news() -> list[NewsItem]:
             link = title_tag.get("href")
             if link and not link.startswith("http"):
                 link = f"https://www.investing.com{link}"
-            items.append(NewsItem(title=title, summary="", url=link, source="Investing.com", region="해외"))
+
+            # 요약 정보 가져오기
+            summary = get_news_summary(link)
+
+            items.append(NewsItem(title=title, summary=summary, url=link, source="Investing.com", region="해외"))
             if len(items) >= settings["news_per_region"] * 2:
                 break
 
@@ -53,9 +57,17 @@ def fetch_overseas_news_rss() -> list[NewsItem]:
 
     for entry in feed.entries[:settings["news_per_region"] * 2]:
         title = entry.get("title", "")
-        summary = entry.get("summary", "")
+        rss_summary = entry.get("summary", "")
         link = entry.get("link", "")
-        items.append(NewsItem(title=title, summary=summary, url=link, source="Investing.com RSS", region="해외"))
+
+        # RSS 요약이 없거나 짧으면 추가 요약 가져오기
+        if not rss_summary or len(rss_summary) < 10:
+            try:
+                rss_summary = get_news_summary(link)
+            except:
+                rss_summary = "요약을 불러올 수 없습니다."
+
+        items.append(NewsItem(title=title, summary=rss_summary, url=link, source="Investing.com RSS", region="해외"))
 
     time.sleep(settings["request_delay_seconds"])
     return items

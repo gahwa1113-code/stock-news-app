@@ -31,6 +31,12 @@ class NotionClient:
         # Title 속성이 있는지 확인
         has_title = any(info.get('type') == 'title' for info in db_properties.values())
 
+        # properties가 없거나 Title 속성이 확인되지 않아도 시도
+        # 실제 페이지 생성 테스트에서 Title 속성으로 성공했음
+        if not has_title and len(db_properties) == 0:
+            print("properties 정보가 없지만 Title 속성으로 저장 시도...")
+            has_title = True
+
         if not has_title:
             print("경고: Notion 데이터베이스에 Title 속성이 없습니다.")
             print("  뉴스 저장을 건너뜁니다. Notion에서 Title 속성을 추가해주세요.")

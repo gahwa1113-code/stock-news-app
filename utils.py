@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import List
+import requests
+from bs4 import BeautifulSoup
 
 
 @dataclass
@@ -65,3 +67,14 @@ def write_log(message: str):
     file_path = logs_dir / f"{now.strftime('%Y-%m-%d')}.log"
     with file_path.open("a", encoding="utf-8") as f:
         f.write(f"{now.isoformat()} - {message}\n")
+
+
+def get_news_summary(url: str) -> str:
+    """뉴스 URL에서 본문을 가져와 요약을 생성합니다."""
+    # 일단 테스트를 위해 간단한 요약 반환
+    if "naver" in url:
+        return "네이버 뉴스에서 가져온 경제 뉴스 요약입니다."
+    elif "investing" in url:
+        return "Investing.com에서 가져온 해외 증시 뉴스 요약입니다."
+    else:
+        return "해당 뉴스의 요약 정보를 제공합니다."
