@@ -35,5 +35,5 @@ jobs:
           NOTION_DB_STOCKS_ID: ${{ secrets.NOTION_DB_STOCKS_ID }}
           NOTION_DB_APPEARANCES_ID: ${{ secrets.NOTION_DB_APPEARANCES_ID }}
           GH_PAT: ${{ secrets.GH_PAT }}
-          GITHUB_REPO: ${{ secrets.GITHUB_REPO }}
+          GITHUB_REPO: gahwa1113-code/Stock-Chart
         run: python -m src.main
