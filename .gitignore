@@ -1,0 +1,6 @@
+.env
+charts/*.png
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/

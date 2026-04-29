@@ -1,0 +1,10 @@
+pykrx==1.0.51
+finance-datareader>=0.9
+mplfinance>=0.12.9b5
+pandas>=2.0
+requests>=2.31
+google-genai>=1.0
+notion-client>=2.2
+python-dotenv>=1.0
+matplotlib>=3.8
+PyGithub>=2.1
