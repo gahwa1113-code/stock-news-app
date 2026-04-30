@@ -191,6 +191,9 @@ def save_to_notion(
             properties=properties,
             children=blocks[:100],
         )
+        # Notion API는 한 번에 최대 100블록 — 초과분을 이어서 추가
+        for i in range(100, len(blocks), 100):
+            notion.blocks.children.append(page["id"], children=blocks[i:i + 100])
         url = page.get("url", "")
         logger.info("노션 저장 완료: %s", url)
         return url

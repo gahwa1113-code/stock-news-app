@@ -55,6 +55,3 @@ CLAUDE_MODEL = "gemini-2.5-flash"
 LLM_MAX_RETRIES = 3              # API 호출 실패 시 최대 재시도 횟수
 LLM_RETRY_DELAY_SEC = 5         # 재시도 대기 시간 (초)
 
-# ── 스케줄 설정 ───────────────────────────────────
-SCHEDULE_HOUR_KST = 7
-SCHEDULE_MINUTE_KST = 0

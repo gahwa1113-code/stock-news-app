@@ -24,7 +24,7 @@ from scrapers.naver_finance import fetch_naver_news
 from scrapers.investing_com import fetch_investing_news
 from scrapers.market_data import fetch_market_data
 from analyzer.keyword_extractor import extract_keywords
-from analyzer.theme_clusterer import cluster_themes, cluster_themes_separate
+from analyzer.theme_clusterer import cluster_themes_separate
 from analyzer.importance_scorer import score_articles
 from summarizer.llm_summarizer import generate_summary
 from storage.notion_writer import save_to_notion
@@ -90,8 +90,8 @@ def run():
 
     # ── 3단계: 테마 클러스터링 ────────────────────
     logger.info("[3단계] 테마 클러스터링 시작")
-    themes = cluster_themes(keyword_freq)
     domestic_themes, international_themes = cluster_themes_separate(dom_kw_freq, intl_kw_freq)
+    themes = domestic_themes + international_themes
 
     # ── 4단계: 중요도 점수 → Top 선정 ─────────────
     logger.info("[4단계] 중요도 점수 산정 시작")
