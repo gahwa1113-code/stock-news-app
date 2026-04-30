@@ -43,12 +43,19 @@ class NotionClient:
             return  # 조용히 리턴
 
         for item in news_items:
-            # Title 속성이 있으므로 저장 진행
-            properties = {
-                "Title": {
-                    "title": [{"text": {"content": f"[{item.region}] {item.title}"}}]
-                }
-            }
+            # 실제 title 속성 이름 찾기
+            title_prop_name = "이름"  # 한국어 Notion 기본값
+            for prop_name, prop_info in db_properties.items():
+                if prop_info.get('type') == 'title':
+                    title_prop_name = prop_name
+                    breack
+                    print(f"사용할 title 속성명: {title_prop_name}")
+                    for item in news_items:
+                        properties = {
+                            title_prop_name: {
+                                "title": [{"text": {"content": f"[{item.region}] {item.title}"}}]
+                            } 
+                        } 
 
             # 다른 속성들이 있으면 추가
             prop_names = list(db_properties.keys())
@@ -74,9 +81,9 @@ class NotionClient:
                 print(f"실패: 뉴스 저장 실패: {e}")
 
     def _get_database_properties(self):
-        """데이터베이스의 현재 속성들을 가져옵니다."""
-        try:
-            db = self.client.databases.retrieve(database_id=self.database_id)
-            return db.get('properties', {})
-        except:
-            return {}
+    try:
+        db = self.client.databases.retrieve(database_id=self.database_id)
+        return db.get('properties', {})
+    except Exception as e:
+        print(f"데이터베이스 속성 조회 실패: {e}")  # except에 e 추가
+        return {}
