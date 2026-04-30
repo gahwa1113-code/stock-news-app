@@ -25,7 +25,7 @@ def main():
         write_log("Notion 저장 완료")
     except Exception as error:
         write_log(f"Notion 저장 실패: {error}")
-        print("주의: Notion 저장에 실패했습니다. .env 토큰이나 데이터베이스 ID를 확인하세요.")
+        print(f"주의: Notion 저장에 실패했습니다: {error}")
 
 
 if __name__ == "__main__":
