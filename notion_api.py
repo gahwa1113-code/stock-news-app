@@ -22,34 +22,26 @@ class NotionClient:
         self.database_id = database_id
         print(f"[DEBUG] DB ID: {self.database_id[:8]}...")
 
-    def save_news_items(self, news_items: list[NewsItem]):
+        def save_news_items(self, news_items: list[NewsItem]):
         today = datetime.now().date().isoformat()
 
-        try:
-            db = self.client.databases.retrieve(database_id=self.database_id)
-            print(f"[DEBUG] DB 이름: {db.get('title', [{}])[0].get('plain_text', '알수없음')}")
-            print(f"[DEBUG] 실제 속성 목록: {list(db.get('properties', {}).keys())}")
-        except Exception as e:
-            print(f"[DEBUG] DB 조회 실패: {repr(e)}")
+        import requests as r
+        token = os.getenv("NOTION_TOKEN")
+        resp = r.get(
+            f"https://api.notion.com/v1/databases/{self.database_id}",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Notion-Version": "2022-06-28"
+            }
+        )
+        print(f"[DEBUG] API 상태코드: {resp.status_code}")
+        data = resp.json()
+        print(f"[DEBUG] object 타입: {data.get('object')}")
+        print(f"[DEBUG] 속성 목록: {list(data.get('properties', {}).keys())}")
+        print(f"[DEBUG] 에러: {data.get('message', '없음')}")
 
         for item in news_items:
-            properties = {
-                "Title": {
-                    "title": [{"text": {"content": f"[{item.region}] {item.title}"}}]
-                },
-                "Date": {
-                    "date": {"start": today}
-                }
-            }
 
-            try:
-                self.client.pages.create(
-                    parent={"database_id": self.database_id},
-                    properties=properties,
-                )
-                print(f"성공: [{item.region}] {item.title}")
-            except Exception as e:
-                print(f"실패: {e}")
 
     def _get_database_properties(self):
         try:
