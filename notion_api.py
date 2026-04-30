@@ -17,7 +17,6 @@ def _generate_summary(title: str, original_summary: str) -> str:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return original_summary
-
     try:
         client = OpenAI(
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
@@ -75,7 +74,6 @@ class NotionClient:
         for item in news_items:
             print(f"저장 중: [{item.region}] {item.title[:30]}...")
 
-            # Gemini AI 요약 생성
             ai_summary = _generate_summary(item.title, item.summary)
             time.sleep(1)
 
@@ -86,17 +84,9 @@ class NotionClient:
                 "Date": {"date": {"start": today}},
             }
 
-            if "Region" in db_props:
-                properties["Region"] = {"select": {"name": item.region}}
             if "Summary" in db_props:
                 properties["Summary"] = {
                     "rich_text": [{"text": {"content": ai_summary[:2000]}}]
-                }
-            if "URL" in db_props:
-                properties["URL"] = {"url": item.url}
-            if "Source" in db_props:
-                properties["Source"] = {
-                    "rich_text": [{"text": {"content": item.source}}]
                 }
 
             try:
