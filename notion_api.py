@@ -20,42 +20,20 @@ class NotionClient:
 
         self.client = Client(auth=token)
         self.database_id = database_id
+        print(f"[DEBUG] NotionClient 초기화 완료. DB ID: {self.database_id[:8]}...")
 
     def save_news_items(self, news_items: list[NewsItem]):
         today = datetime.now().date().isoformat()
 
-        db_properties = self._get_database_properties()
-        print(f"[DEBUG] DB 속성 목록: {list(db_properties.keys())}")
-
-        title_prop_name = None
-        for prop_name, prop_info in db_properties.items():
-            if prop_info.get('type') == 'title':
-                title_prop_name = prop_name
-                break
-
-        if title_prop_name is None:
-            title_prop_name = "Title"
-            print(f"title 속성을 찾지 못해 기본값 사용: {title_prop_name}")
-        else:
-            print(f"사용할 title 속성명: {title_prop_name}")
-
-        prop_names = list(db_properties.keys())
-
         for item in news_items:
             properties = {
-                title_prop_name: {
+                "Title": {
                     "title": [{"text": {"content": f"[{item.region}] {item.title}"}}]
+                },
+                "Date": {
+                    "date": {"start": today}
                 }
             }
-
-            if "Date" in prop_names:
-                properties["Date"] = {"date": {"start": today}}
-            if "Region" in prop_names:
-                properties["Region"] = {"select": {"name": item.region}}
-            if "Source" in prop_names:
-                properties["Source"] = {"rich_text": [{"text": {"content": item.source}}]}
-            if "URL" in prop_names:
-                properties["URL"] = {"url": item.url}
 
             try:
                 self.client.pages.create(
@@ -65,12 +43,3 @@ class NotionClient:
                 print(f"성공: [{item.region}] {item.title}")
             except Exception as e:
                 print(f"실패: {e}")
-
-    def _get_database_properties(self):
-        try:
-            db = self.client.databases.retrieve(database_id=self.database_id)
-            return db.get('properties', {})
-        except Exception as e:
-            print(f"데이터베이스 속성 조회 실패: {e}")
-            return {}
-
