@@ -20,21 +20,17 @@ class NotionClient:
 
         self.client = Client(auth=token)
         self.database_id = database_id
-        print(f"[DEBUG] NotionClient 초기화 완료. DB ID: {self.database_id[:8]}...")
+        print(f"[DEBUG] DB ID: {self.database_id[:8]}...")
 
     def save_news_items(self, news_items: list[NewsItem]):
         today = datetime.now().date().isoformat()
-   
-    # 아래 3줄 추가
-    try:
-        db = self.client.databases.retrieve(database_id=self.database_id)
-        print(f"[DEBUG] 연결된 DB 이름: {db.get('title', [{}])[0].get('plain_text', '알수없음')}")
-        print(f"[DEBUG] 실제 속성 목록: {list(db.get('properties', {}).keys())}")
-    except Exception as e:
-        print(f"[DEBUG] DB 조회 실패: {repr(e)}")
 
-    for item in news_items:
-
+        try:
+            db = self.client.databases.retrieve(database_id=self.database_id)
+            print(f"[DEBUG] DB 이름: {db.get('title', [{}])[0].get('plain_text', '알수없음')}")
+            print(f"[DEBUG] 실제 속성 목록: {list(db.get('properties', {}).keys())}")
+        except Exception as e:
+            print(f"[DEBUG] DB 조회 실패: {repr(e)}")
 
         for item in news_items:
             properties = {
@@ -54,3 +50,11 @@ class NotionClient:
                 print(f"성공: [{item.region}] {item.title}")
             except Exception as e:
                 print(f"실패: {e}")
+
+    def _get_database_properties(self):
+        try:
+            db = self.client.databases.retrieve(database_id=self.database_id)
+            return db.get('properties', {})
+        except Exception as e:
+            print(f"데이터베이스 속성 조회 실패: {repr(e)}")
+            return {}
