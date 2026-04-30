@@ -24,6 +24,17 @@ class NotionClient:
 
     def save_news_items(self, news_items: list[NewsItem]):
         today = datetime.now().date().isoformat()
+   
+    # 아래 3줄 추가
+    try:
+        db = self.client.databases.retrieve(database_id=self.database_id)
+        print(f"[DEBUG] 연결된 DB 이름: {db.get('title', [{}])[0].get('plain_text', '알수없음')}")
+        print(f"[DEBUG] 실제 속성 목록: {list(db.get('properties', {}).keys())}")
+    except Exception as e:
+        print(f"[DEBUG] DB 조회 실패: {repr(e)}")
+
+    for item in news_items:
+
 
         for item in news_items:
             properties = {
