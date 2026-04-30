@@ -1,0 +1,43 @@
+# ==============================
+# 절대 깃허브에 올리면 안 되는 파일
+# ==============================
+
+# API 키가 담긴 환경변수 파일
+.env
+
+# 파이썬 가상환경 (용량이 크고 각자 설치해야 함)
+venv/
+.venv/
+env/
+
+# 파이썬 캐시 파일
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# 로그 파일 (로컬에서만 필요)
+logs/
+*.log
+
+# 운영체제 자동 생성 파일
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE 설정
+.vscode/
+.idea/
+
+# 임시 백업 파일
+*.json.bak
+backup/
+notion_dbs.json
+
+# 로컬 전용 런처 스크립트
+run.bat
+
+# 임시 디버그 파일
+tmp_*.txt
+test_output.py
