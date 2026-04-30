@@ -26,7 +26,7 @@ class NotionClient:
         db_properties = self._get_database_properties()
 
         # 실제 title 타입 속성 이름 찾기
-        title_prop_name = None
+        title_prop_name = "Title"  # 실제 속성명
         for prop_name, prop_info in db_properties.items():
             if prop_info.get('type') == 'title':
                 title_prop_name = prop_name
