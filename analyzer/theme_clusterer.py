@@ -94,7 +94,7 @@ def cluster_themes_separate(
         except Exception as e:
             logger.warning("테마 분리 클러스터링 오류 (시도 %d/%d): %s", attempt + 1, config.LLM_MAX_RETRIES, e)
             if attempt < config.LLM_MAX_RETRIES - 1:
-                time.sleep(config.LLM_RETRY_DELAY_SEC * (attempt + 1))
+                time.sleep(config.LLM_BACKOFF_DELAYS[attempt])
 
     logger.error("테마 분리 클러스터링 최종 실패")
     return [], []

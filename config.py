@@ -73,6 +73,6 @@ KOREAN_STOPWORDS = {
 # ── LLM 설정 ─────────────────────────────────────
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 CLAUDE_MODEL = "gemini-2.5-flash"
-LLM_MAX_RETRIES = 3              # API 호출 실패 시 최대 재시도 횟수
-LLM_RETRY_DELAY_SEC = 5         # 재시도 대기 시간 (초)
+LLM_MAX_RETRIES = 5              # API 호출 실패 시 최대 재시도 횟수
+LLM_BACKOFF_DELAYS = [1, 2, 4, 9, 16]  # 재시도별 대기 시간 (초)
 
