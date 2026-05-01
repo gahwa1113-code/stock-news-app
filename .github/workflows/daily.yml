@@ -22,12 +22,12 @@ jobs:
       - name: Secrets 설정 확인
         run: |
           echo "GEMINI_API_KEY 설정됨: ${{ secrets.GEMINI_API_KEY != '' }}"
-          echo "NOTION_API_KEY 설정됨: ${{ secrets.NOTION_API_KEY != '' }}"
+          echo "NOTION_TOKEN 설정됨: ${{ secrets.NOTION_TOKEN != '' }}"
           echo "NOTION_DATABASE_ID 설정됨: ${{ secrets.NOTION_DATABASE_ID != '' }}"
 
       - name: 뉴스 봇 실행
         run: python main.py
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_API_KEY: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
