@@ -1,11 +1,14 @@
 """
-Investing.com 뉴스 크롤러 (playwright 사용 — JS 렌더링 대응)
+Investing.com 뉴스 크롤러 (RSS 피드 사용)
 실행 테스트: python -m scrapers.investing_com
 """
-import asyncio
+import calendar
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+import feedparser
+import requests
 
 import sys
 import os
@@ -14,96 +17,55 @@ import config
 
 logger = logging.getLogger(__name__)
 
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (compatible; feedparser/6.0; "
+        "+https://github.com/kurtmckee/feedparser)"
+    )
+}
+
+
+def _parse_published(entry) -> datetime | None:
+    if hasattr(entry, "published_parsed") and entry.published_parsed:
+        ts = calendar.timegm(entry.published_parsed)
+        return datetime.fromtimestamp(ts, tz=timezone.utc).astimezone(config.KST)
+    return None
+
 
 def _is_recent(dt: datetime | None) -> bool:
     if dt is None:
         return False
-    now = datetime.now(config.KST)
-    cutoff = now - timedelta(hours=config.NEWS_WINDOW_HOURS)
-    if dt.tzinfo is None:
-        dt = config.KST.localize(dt)
+    cutoff = datetime.now(config.KST) - timedelta(hours=config.NEWS_WINDOW_HOURS)
     return dt >= cutoff
 
 
-async def _fetch_with_playwright(url: str) -> list[dict]:
-    """playwright로 JS 렌더링 후 기사 목록 추출"""
-    from playwright.async_api import async_playwright
-
-    articles = []
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page(
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            )
-        )
-        try:
-            await page.goto(url, wait_until="load", timeout=60000)
-            await page.wait_for_timeout(2000)
-
-            # Investing.com 기사 카드 선택자
-            cards = await page.query_selector_all("article, [data-test='article-item']")
-            if not cards:
-                cards = await page.query_selector_all(".articleItem, .js-article-item")
-
-            for card in cards[: config.MAX_ARTICLES_PER_SOURCE]:
-                try:
-                    title_el = await card.query_selector("a[href], h3 a, .title a")
-                    if not title_el:
-                        continue
-                    title = await title_el.inner_text()
-                    href = await title_el.get_attribute("href")
-                    article_url = (
-                        href if href and href.startswith("http")
-                        else "https://www.investing.com" + (href or "")
-                    )
-
-                    time_el = await card.query_selector("time, [data-test='article-publish-date']")
-                    published_at = None
-                    if time_el:
-                        dt_attr = await time_el.get_attribute("datetime")
-                        if dt_attr:
-                            try:
-                                published_at = datetime.fromisoformat(dt_attr.replace("Z", "+00:00"))
-                                published_at = published_at.astimezone(config.KST)
-                            except Exception:
-                                pass
-
-                    if not _is_recent(published_at):
-                        continue
-
-                    articles.append({
-                        "title": title.strip(),
-                        "summary": "",
-                        "url": article_url,
-                        "source": "Investing.com",
-                        "published_at": published_at,
-                        "category": "",
-                    })
-                except Exception as e:
-                    logger.debug("카드 파싱 오류: %s", e)
-
-        except Exception as e:
-            logger.warning("Investing.com 크롤링 오류 (%s): %s", url, e)
-        finally:
-            await browser.close()
-
-    return articles
-
-
 def fetch_investing_news() -> list[dict]:
-    """Investing.com 뉴스 수집 (동기 래퍼)"""
-    urls = [config.INVESTING_STOCK_URL, config.INVESTING_ECONOMY_URL]
+    """Investing.com RSS 피드에서 뉴스 수집"""
     all_articles = []
 
-    for url in urls:
-        articles = asyncio.run(_fetch_with_playwright(url))
-        all_articles.extend(articles)
+    for rss_url in config.INVESTING_RSS_URLS:
+        try:
+            resp = requests.get(rss_url, headers=HEADERS, timeout=15)
+            resp.raise_for_status()
+            feed = feedparser.parse(resp.content)
+
+            for entry in feed.entries[:config.MAX_ARTICLES_PER_SOURCE]:
+                published_at = _parse_published(entry)
+                if not _is_recent(published_at):
+                    continue
+                all_articles.append({
+                    "title": entry.get("title", "").strip(),
+                    "summary": entry.get("summary", "").strip(),
+                    "url": entry.get("link", ""),
+                    "source": "Investing.com",
+                    "published_at": published_at,
+                    "category": "",
+                })
+        except Exception as e:
+            logger.warning("Investing.com RSS 수집 오류 (%s): %s", rss_url, e)
+
         time.sleep(config.REQUEST_DELAY_SEC)
 
-    # 중복 URL 제거
     seen = set()
     unique = []
     for a in all_articles:

@@ -12,8 +12,10 @@ NAVER_LIST_URL = (
     "https://finance.naver.com/news/news_list.naver"
     "?mode=LSS2D&section_id=101&section_id2=258"
 )
-INVESTING_STOCK_URL = "https://www.investing.com/news/stock-market-news"
-INVESTING_ECONOMY_URL = "https://www.investing.com/news/economy"
+INVESTING_RSS_URLS = [
+    "https://www.investing.com/rss/news_25.rss",   # stock market
+    "https://www.investing.com/rss/news_14.rss",   # economy
+]
 
 # ── 크롤링 설정 ───────────────────────────────────
 REQUEST_DELAY_SEC = 1.5          # 요청 사이 대기 시간 (초)
