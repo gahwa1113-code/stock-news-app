@@ -13,26 +13,36 @@ import config
 
 logger = logging.getLogger(__name__)
 
-DEDUP_THRESHOLD = 0.45  # 제목 단어 Jaccard 유사도 이 이상이면 중복으로 간주
+DEDUP_TITLE_THRESHOLD = 0.45    # 제목 단어 Jaccard 유사도 기준
+DEDUP_CONTENT_THRESHOLD = 0.55  # 제목+본문 합산 Jaccard 유사도 기준
 
 
-def _title_words(title: str) -> set[str]:
-    return set(re.findall(r"\w+", title.lower()))
+def _words(text: str) -> set[str]:
+    return set(re.findall(r"\w+", text.lower()))
+
+
+def _is_duplicate(a1: dict, a2: dict) -> bool:
+    """제목 또는 제목+본문 유사도가 임계값 이상이면 중복으로 판단."""
+    t1 = _words(a1.get("title", ""))
+    t2 = _words(a2.get("title", ""))
+    union_t = t1 | t2
+    if union_t and len(t1 & t2) / len(union_t) >= DEDUP_TITLE_THRESHOLD:
+        return True
+
+    c1 = _words(a1.get("title", "") + " " + a1.get("summary", ""))
+    c2 = _words(a2.get("title", "") + " " + a2.get("summary", ""))
+    union_c = c1 | c2
+    if union_c and len(c1 & c2) / len(union_c) >= DEDUP_CONTENT_THRESHOLD:
+        return True
+
+    return False
 
 
 def _pick_unique(articles: list[dict], n: int) -> list[dict]:
-    """점수 순 정렬된 기사에서 제목이 유사한 중복을 제거하고 상위 n개 반환."""
+    """점수 순 정렬된 기사에서 제목/본문이 유사한 중복을 제거하고 상위 n개 반환."""
     kept: list[dict] = []
     for article in articles:
-        words = _title_words(article.get("title", ""))
-        duplicate = False
-        for k in kept:
-            k_words = _title_words(k.get("title", ""))
-            union = k_words | words
-            if union and len(k_words & words) / len(union) >= DEDUP_THRESHOLD:
-                duplicate = True
-                break
-        if not duplicate:
+        if not any(_is_duplicate(article, k) for k in kept):
             kept.append(article)
         if len(kept) == n:
             break
@@ -88,8 +98,8 @@ def score_articles(
 
     scored.sort(key=lambda x: x["score"], reverse=True)
 
-    domestic = [a for a in scored if a.get("source") == "네이버증권"]
-    international = [a for a in scored if a.get("source") != "네이버증권"]
+    domestic = [a for a in scored if a.get("source") in config.DOMESTIC_SOURCES]
+    international = [a for a in scored if a.get("source") not in config.DOMESTIC_SOURCES]
 
     top_domestic = _pick_unique(domestic, config.TOP_DOMESTIC_COUNT)
     top_international = _pick_unique(international, config.TOP_INTERNATIONAL_COUNT)

@@ -21,7 +21,11 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
 from scrapers.naver_finance import fetch_naver_news
+from scrapers.hankyung import fetch_hankyung_news
+from scrapers.mk import fetch_mk_news
+from scrapers.dart import fetch_dart_disclosures
 from scrapers.investing_com import fetch_investing_news
+from scrapers.bloomberg import fetch_bloomberg_news
 from scrapers.market_data import fetch_market_data
 from analyzer.keyword_extractor import extract_keywords
 from analyzer.theme_clusterer import cluster_themes_separate
@@ -60,11 +64,39 @@ def run():
         logger.error("  네이버 크롤링 실패: %s", e)
 
     try:
+        hankyung_articles = fetch_hankyung_news()
+        articles.extend(hankyung_articles)
+        logger.info("  한국경제: %d개", len(hankyung_articles))
+    except Exception as e:
+        logger.error("  한국경제 크롤링 실패: %s", e)
+
+    try:
+        mk_articles = fetch_mk_news()
+        articles.extend(mk_articles)
+        logger.info("  매일경제: %d개", len(mk_articles))
+    except Exception as e:
+        logger.error("  매일경제 크롤링 실패: %s", e)
+
+    try:
+        dart_articles = fetch_dart_disclosures()
+        articles.extend(dart_articles)
+        logger.info("  DART 공시: %d개", len(dart_articles))
+    except Exception as e:
+        logger.error("  DART 크롤링 실패: %s", e)
+
+    try:
         investing_articles = fetch_investing_news()
         articles.extend(investing_articles)
         logger.info("  Investing.com: %d개", len(investing_articles))
     except Exception as e:
         logger.error("  Investing.com 크롤링 실패: %s", e)
+
+    try:
+        bloomberg_articles = fetch_bloomberg_news()
+        articles.extend(bloomberg_articles)
+        logger.info("  Bloomberg: %d개", len(bloomberg_articles))
+    except Exception as e:
+        logger.error("  Bloomberg 크롤링 실패: %s", e)
 
     if not articles:
         logger.error("수집된 기사가 없습니다. 종료합니다.")
@@ -83,8 +115,8 @@ def run():
     keyword_freq, keyword_to_ids = extract_keywords(articles)
 
     # 국내/해외 테마 분리를 위한 별도 키워드 추출
-    domestic_articles = [a for a in articles if a.get("source") == "네이버증권"]
-    international_articles = [a for a in articles if a.get("source") != "네이버증권"]
+    domestic_articles = [a for a in articles if a.get("source") in config.DOMESTIC_SOURCES]
+    international_articles = [a for a in articles if a.get("source") not in config.DOMESTIC_SOURCES]
     dom_kw_freq, _ = extract_keywords(domestic_articles, min_freq=1)
     intl_kw_freq, _ = extract_keywords(international_articles, min_freq=1)
 
