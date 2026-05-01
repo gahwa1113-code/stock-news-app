@@ -35,7 +35,7 @@ DOMESTIC_SOURCES = {"네이버증권", "한국경제", "매일경제", "DART"}
 # ── 크롤링 설정 ───────────────────────────────────
 REQUEST_DELAY_SEC = 1.5          # 요청 사이 대기 시간 (초)
 NEWS_WINDOW_HOURS = 24           # 최근 N시간 이내 뉴스만 수집
-MAX_ARTICLES_PER_SOURCE = 30     # 소스당 최대 수집 기사 수
+MAX_ARTICLES_PER_SOURCE = 50     # 소스당 최대 수집 기사 수
 
 # ── 분석 설정 ─────────────────────────────────────
 MIN_KEYWORD_FREQ = 2             # 최소 등장 빈도 (이 이상만 유효 키워드)
