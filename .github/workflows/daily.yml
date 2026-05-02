@@ -2,7 +2,7 @@ name: Daily Stock News Bot
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # UTC 22:00 = KST 07:00
+    - cron: '23 21 * * *'  # UTC 21:23 = KST 06:23
   workflow_dispatch:        # GitHub에서 수동 실행 버튼
 
 jobs:
