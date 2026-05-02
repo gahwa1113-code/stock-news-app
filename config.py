@@ -8,10 +8,12 @@ KST = pytz.timezone("Asia/Seoul")
 
 # ── 크롤링 대상 URL ───────────────────────────────
 NAVER_MAIN_URL = "https://finance.naver.com/news/mainnews.naver"
-NAVER_LIST_URL = (
-    "https://finance.naver.com/news/news_list.naver"
-    "?mode=LSS2D&section_id=101&section_id2=258"
-)
+NAVER_LIST_URLS = [
+    "https://finance.naver.com/news/news_list.naver?mode=LSS2D&section_id=101&section_id2=258",  # 시황/전망
+    "https://finance.naver.com/news/news_list.naver?mode=LSS2D&section_id=101&section_id2=259",  # 기업/산업
+    "https://finance.naver.com/news/news_list.naver?mode=LSS2D&section_id=101&section_id2=260",  # 해외증시
+    "https://finance.naver.com/news/news_list.naver?mode=LSS2D&section_id=101&section_id2=261",  # 채권/선물
+]
 HANKYUNG_RSS_URLS = [
     "https://www.hankyung.com/feed/finance",       # 증권/금융
     "https://www.hankyung.com/feed/economy",       # 경제
@@ -25,7 +27,6 @@ INVESTING_RSS_URLS = [
     "https://www.investing.com/rss/news_14.rss",   # economy
     "https://www.investing.com/rss/news_285.rss",  # US stocks
     "https://www.investing.com/rss/news_95.rss",   # commodities
-    "https://www.investing.com/rss/news_24.rss",   # currencies
 ]
 BLOOMBERG_RSS_URLS = [
     "https://feeds.bloomberg.com/markets/news.rss",

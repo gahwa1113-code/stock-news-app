@@ -126,11 +126,10 @@ def fetch_naver_news() -> list[dict]:
     except Exception as e:
         logger.warning("네이버 크롤링 오류 (%s): %s", config.NAVER_MAIN_URL, e)
 
-    # 리스트 페이지 (페이지네이션)
-    for page in range(1, 6):
+    # 카테고리별 리스트 페이지
+    for url in config.NAVER_LIST_URLS:
         if len(articles) >= config.MAX_ARTICLES_PER_SOURCE:
             break
-        url = f"{config.NAVER_LIST_URL}&page={page}"
         try:
             for a in _scrape_naver_url(url):
                 if a["url"] not in seen_urls:
@@ -139,7 +138,6 @@ def fetch_naver_news() -> list[dict]:
             time.sleep(config.REQUEST_DELAY_SEC)
         except Exception as e:
             logger.warning("네이버 크롤링 오류 (%s): %s", url, e)
-            break
 
     logger.info("네이버 증권: %d개 기사 수집", len(articles))
     return articles
