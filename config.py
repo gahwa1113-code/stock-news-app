@@ -23,6 +23,9 @@ MK_RSS_URLS = [
 INVESTING_RSS_URLS = [
     "https://www.investing.com/rss/news_25.rss",   # stock market
     "https://www.investing.com/rss/news_14.rss",   # economy
+    "https://www.investing.com/rss/news_285.rss",  # US stocks
+    "https://www.investing.com/rss/news_95.rss",   # commodities
+    "https://www.investing.com/rss/news_24.rss",   # currencies
 ]
 BLOOMBERG_RSS_URLS = [
     "https://feeds.bloomberg.com/markets/news.rss",

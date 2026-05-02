@@ -60,65 +60,86 @@ def _is_recent(dt: datetime | None) -> bool:
     return dt >= cutoff
 
 
-def fetch_naver_news() -> list[dict]:
-    """네이버 증권 메인 뉴스 수집"""
+def _scrape_naver_url(url: str) -> list[dict]:
+    """단일 네이버 증권 URL에서 기사 파싱"""
+    resp = requests.get(url, headers=HEADERS, timeout=10)
+    resp.raise_for_status()
+    resp.encoding = "euc-kr"
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    items = soup.select("ul.newsList li.block1")
+    if not items:
+        items = soup.select("ul.newsList li")
+
     articles = []
-    urls = [config.NAVER_MAIN_URL, config.NAVER_LIST_URL]
+    for item in items:
+        title_tag = item.select_one("dd.articleSubject a")
+        if not title_tag:
+            continue
 
-    for url in urls:
+        title = title_tag.get_text(strip=True)
+        href = title_tag.get("href", "")
+        article_url = (
+            href if href.startswith("http")
+            else "https://finance.naver.com" + href
+        )
+
+        time_tag = item.select_one("span.wdate")
+        raw_time = time_tag.get_text(strip=True) if time_tag else ""
+        published_at = _parse_naver_time(raw_time)
+
+        if not _is_recent(published_at):
+            continue
+
+        summary_tag = item.select_one("dd.articleSummary")
+        if summary_tag:
+            for span in summary_tag.find_all("span"):
+                span.decompose()
+            summary = summary_tag.get_text(strip=True)
+        else:
+            summary = ""
+
+        articles.append({
+            "title": title,
+            "summary": summary,
+            "url": article_url,
+            "source": "네이버증권",
+            "published_at": published_at,
+            "category": "",
+        })
+
+    return articles
+
+
+def fetch_naver_news() -> list[dict]:
+    """네이버 증권 메인 뉴스 수집 (페이지네이션 포함)"""
+    seen_urls = set()
+    articles = []
+
+    # 메인 페이지
+    try:
+        for a in _scrape_naver_url(config.NAVER_MAIN_URL):
+            if a["url"] not in seen_urls:
+                seen_urls.add(a["url"])
+                articles.append(a)
+        time.sleep(config.REQUEST_DELAY_SEC)
+    except Exception as e:
+        logger.warning("네이버 크롤링 오류 (%s): %s", config.NAVER_MAIN_URL, e)
+
+    # 리스트 페이지 (페이지네이션)
+    for page in range(1, 6):
+        if len(articles) >= config.MAX_ARTICLES_PER_SOURCE:
+            break
+        url = f"{config.NAVER_LIST_URL}&page={page}"
         try:
-            resp = requests.get(url, headers=HEADERS, timeout=10)
-            resp.raise_for_status()
-            resp.encoding = "euc-kr"
-            soup = BeautifulSoup(resp.text, "html.parser")
-
-            items = soup.select("ul.newsList li.block1")
-            if not items:
-                items = soup.select("ul.newsList li")
-
-            for item in items[: config.MAX_ARTICLES_PER_SOURCE]:
-                # 제목 + URL: dd.articleSubject a
-                title_tag = item.select_one("dd.articleSubject a")
-                if not title_tag:
-                    continue
-
-                title = title_tag.get_text(strip=True)
-                href = title_tag.get("href", "")
-                article_url = (
-                    href if href.startswith("http")
-                    else "https://finance.naver.com" + href
-                )
-
-                # 날짜: span.wdate
-                time_tag = item.select_one("span.wdate")
-                raw_time = time_tag.get_text(strip=True) if time_tag else ""
-                published_at = _parse_naver_time(raw_time)
-
-                if not _is_recent(published_at):
-                    continue
-
-                # 요약: dd.articleSummary 텍스트 (span 제외)
-                summary_tag = item.select_one("dd.articleSummary")
-                if summary_tag:
-                    for span in summary_tag.find_all("span"):
-                        span.decompose()
-                    summary = summary_tag.get_text(strip=True)
-                else:
-                    summary = ""
-
-                articles.append({
-                    "title": title,
-                    "summary": summary,
-                    "url": article_url,
-                    "source": "네이버증권",
-                    "published_at": published_at,
-                    "category": "",
-                })
-
+            for a in _scrape_naver_url(url):
+                if a["url"] not in seen_urls:
+                    seen_urls.add(a["url"])
+                    articles.append(a)
             time.sleep(config.REQUEST_DELAY_SEC)
-
         except Exception as e:
             logger.warning("네이버 크롤링 오류 (%s): %s", url, e)
+            break
 
     logger.info("네이버 증권: %d개 기사 수집", len(articles))
     return articles
